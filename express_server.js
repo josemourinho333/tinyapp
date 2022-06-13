@@ -13,6 +13,11 @@ app.get('/', (request, response) => {
   response.send('Hello');
 });
 
+app.get('/urls', (request, response) => {
+  const templateVars = { urls: urlDataBase };
+  response.render('urls_index', templateVars);
+});
+
 
 app.listen(PORT, () => {
   console.log(`App now listening on port ${PORT}...`);
