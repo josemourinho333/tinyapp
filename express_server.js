@@ -13,10 +13,17 @@ app.get('/', (request, response) => {
   response.send('Hello');
 });
 
+app.get('/urls/:shortURL', (request, response) => {
+  const templateVars = { shortURL: request.params.shortURL, longURL: request.params.longURL };
+  response.render('urls_show', templateVars);
+});
+
+
 app.get('/urls', (request, response) => {
   const templateVars = { urls: urlDataBase };
   response.render('urls_index', templateVars);
 });
+
 
 
 app.listen(PORT, () => {
