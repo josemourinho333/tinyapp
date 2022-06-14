@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const PORT = 8080;
 
 
@@ -15,6 +16,7 @@ function generateRandomString() {
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 const urlDataBase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -31,16 +33,17 @@ app.get('/u/:shortURL', (request, response) => {
 })
 
 app.get('/urls/new', (request, response) => {
-  response.render('urls_new');
+  const templateVars = { username: request.cookies.username };
+  response.render('urls_new', templateVars);
 });
 
 app.get('/urls/:shortURL', (request, response) => {
-  const templateVars = { shortURL: request.params.shortURL, longURL: urlDataBase[request.params.shortURL] };
+  const templateVars = { username: request.cookies.username, shortURL: request.params.shortURL, longURL: urlDataBase[request.params.shortURL] };
   response.render('urls_show', templateVars);
 });
 
 app.get('/urls', (request, response) => {
-  const templateVars = { urls: urlDataBase };
+  const templateVars = { username: request.cookies.username, urls: urlDataBase };
   response.render('urls_index', templateVars);
 });
 
@@ -57,6 +60,16 @@ app.post('/urls/:shortURL/delete', (request, response) => {
 
 app.post('/urls/:shortURL/update', (request, response) => {
   urlDataBase[request.params.shortURL] = request.body.longURL;
+  response.redirect('/urls');
+});
+
+app.post('/login', (request, response) => {
+  response.cookie('username', request.body.username);
+  response.redirect('/urls');
+});
+
+app.post('/logout', (request, response) => {
+  response.clearCookie('username', request.cookies.username);
   response.redirect('/urls');
 });
 
