@@ -25,6 +25,11 @@ app.get('/', (request, response) => {
   response.send('Hello');
 });
 
+app.get('/u/:shortURL', (request, response) => {
+  const longURL = urlDataBase[request.params.shortURL];
+  response.redirect(longURL);
+})
+
 app.get('/urls/new', (request, response) => {
   response.render('urls_new');
 });
@@ -40,9 +45,10 @@ app.get('/urls', (request, response) => {
 });
 
 app.post('/urls', (request, response) => {
-  console.log(request.body);
-  response.send('ok you good');
-})
+  let shortURL = generateRandomString();
+  urlDataBase[shortURL] = 'http://' + request.body.longURL;
+  response.redirect(`/urls/${shortURL}`);
+});
 
 app.listen(PORT, () => {
   console.log(`App now listening on port ${PORT}...`);
