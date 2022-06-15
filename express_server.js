@@ -48,13 +48,30 @@ const userEmailExists = (email) => {
   return false;
 };
 
+/// helper, given email, return object with ID and PASSWORD associated with the email
+const getPWandIDFromEmail = (email) => {
+  for (const user in users) {
+    if (email === users[user].email) {
+      return { id: users[user].id, password: users[user].password }
+    }
+  }
+
+  return {};
+};
+
+//// GET
+
 app.get('/', (request, response) => {
-  response.redirect('/urls');
+  response.redirect('/sigin');
 });
 
-app.get('/register', (request, response) => {
-  response.render('urls_register');
+app.get('/signin', (request, response) => {
+  response.render('urls_signin');
 });
+
+// app.get('/register', (request, response) => {
+//   response.render('urls_register');
+// });
 
 app.get('/u/:shortURL', (request, response) => {
   const longURL = urlDataBase[request.params.shortURL];
@@ -75,6 +92,8 @@ app.get('/urls', (request, response) => {
   const templateVars = { user: users[request.cookies.user_id], urls: urlDataBase };
   response.render('urls_index', templateVars);
 });
+
+//// POST 
 
 app.post('/register', (request, response) => {
   const newUserID = generateRandomString();
@@ -113,13 +132,25 @@ app.post('/urls/:shortURL/update', (request, response) => {
 });
 
 app.post('/login', (request, response) => {
-  response.cookie('user_id', request.body.user_id);
-  response.redirect('/urls');
+  console.log(request.body);
+  if (!userEmailExists(request.body.email)) {
+    response.statusCode = 403;
+    response.send('email not found');
+  } else if (userEmailExists(request.body.email)) {
+    const savedUser = getPWandIDFromEmail(request.body.email);
+    if (request.body.password !== savedUser.password) {
+      response.statusCode = 403;
+      response.send('Wrong password');
+    } else if (request.body.password === savedUser.password) {
+      response.cookie('user_id', savedUser.id);
+      response.redirect('/urls')
+    }
+  }
 });
 
 app.post('/logout', (request, response) => {
   response.clearCookie('user_id', request.cookies.user_id);
-  response.redirect('/register');
+  response.redirect('/signin');
 });
 
 app.listen(PORT, () => {
