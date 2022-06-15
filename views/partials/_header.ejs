@@ -8,9 +8,9 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link mr-3" href="/urls">My URLs</a>
         <a class="nav-item nav-link mr-3" href="/urls/new">Create New URL</a>
-        <% if (username) {%>
+        <% if (user) {%>
         <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#sign-out">
-          <%= username %>
+          <%= user.email %>
         </button>
         <%} else {%>
         <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#sign-in">
@@ -52,7 +52,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLongTitle">Hi, <%= username %></h5>
+          <h5 class="modal-title" id="exampleModalLongTitle">Hi, <%= user.email %></h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
