@@ -76,7 +76,7 @@ const getPWandIDFromEmail = (email) => {
 //// GET
 
 app.get('/', (request, response) => {
-  response.redirect('/sigin');
+  response.redirect('/signin');
 });
 
 app.get('/signin', (request, response) => {
