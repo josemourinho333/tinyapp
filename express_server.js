@@ -73,6 +73,17 @@ const getPWandIDFromEmail = (email) => {
   return {};
 };
 
+/// filters urlsdatabase based on cookie user_id give
+const filterURLs = (userID) => {
+  const filtered = {};
+    for (const key in urlDataBase) {
+      if (urlDataBase[key].userID === userID) {
+        filtered[key] = urlDataBase[key];
+      }
+    }
+  return filtered;
+}
+
 //// GET
 
 app.get('/', (request, response) => {
@@ -115,12 +126,16 @@ app.get('/urls/:shortURL', (request, response) => {
 });
 
 app.get('/urls', (request, response) => {
-  const templateVars = { 
-    user: users[request.cookies.user_id], 
-    urls: urlDataBase, 
-    userList: users 
-  };
-  response.render('urls_index', templateVars);
+  if (!request.cookies.user_id) {
+    response.redirect('/signin');
+  } else {
+    const templateVars = { 
+      user: users[request.cookies.user_id], 
+      urls: filterURLs(request.cookies.user_id), 
+      userList: users 
+    };
+    response.render('urls_index', templateVars);
+  }
 });
 
 //// POST 
@@ -186,7 +201,7 @@ app.post('/login', (request, response) => {
       response.send('Wrong password');
     } else if (request.body.password === savedUser.password) {
       response.cookie('user_id', savedUser.id);
-      response.redirect('/urls')
+      response.redirect('/urls');
     }
   }
 });
