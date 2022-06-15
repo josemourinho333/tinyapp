@@ -8,20 +8,20 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link mr-3" href="/urls">My URLs</a>
         <a class="nav-item nav-link mr-3" href="/urls/new">Create New URL</a>
-        <% if (user) {%>
-        <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#sign-out">
-          <%= user.email %>
-        </button>
+        <% if (user === undefined) {%>
+          <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#sign-in">
+            Sign In
+          </button>
         <%} else {%>
-        <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#sign-in">
-          Sign In
-        </button>
+          <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#sign-out">
+            <%= user.email %>
+          </button>
         <% } %>
       </div>
     </div>
   </nav>
   <!-- Sign In -->
-  <!-- <div class="modal fade" id="sign-in" tabindex="-1" role="dialog" aria-labelledby="sign-in" aria-hidden="true">
+  <div class="modal fade" id="sign-in" tabindex="-1" role="dialog" aria-labelledby="sign-in" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -32,11 +32,11 @@
         </div>
         <div class="modal-body">
           <form action="/login" method="POST">
-            <div class="form-group mb-2">
-              <label for="username">Username: </label>
-              <input class="form-control" type="text" name="username" placeholder="email@email.com">
+            <div class="form-group">
+              <label for="email">Email: </label>
+              <input class="form-control" type="text" name="email" placeholder="email@email.com">
               <label for="username" class="mt-2">Password: </label>
-              <input class="form-control" type="password" name="password">
+              <input class="form-control" type="password" name="password" placeholder="password">
               <div class="modal-footer">
                 <button type="submit" class="btn btn-primary mt-3">Log In</button>
                 <button type="button" class="btn btn-secondary mt-3" data-dismiss="modal">Cancel</button>
@@ -44,15 +44,22 @@
             </div>
           </form>
         </div>
+        <div class="modal-footer">
+          <a href="/register" class="text-dark">Don't have an account? <span class="text-primary">Sign up today.</span></a>
+        </div>
       </div>
     </div>
-  </div> -->
+  </div>
   <!-- Sign Out -->
   <div class="modal fade" id="sign-out" tabindex="-1" role="dialog" aria-labelledby="sign-out" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
+          <% if (user === undefined) { %>
+            <h5 class="modal-title" id="exampleModalLongTitle">Hi, Guest</h5>
+          <% } else { %>
           <h5 class="modal-title" id="exampleModalLongTitle">Hi, <%= user.email %></h5>
+          <% } %>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>

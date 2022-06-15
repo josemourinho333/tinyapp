@@ -11,8 +11,22 @@ app.use(cookieParser());
 
 /// storing data
 const urlDataBase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "doritos": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: 'userRandomID' 
+  },
+  "pringles": {
+    longURL: "http://www.netflix.ca",
+    userID: 'userRandomID' 
+  },
+  "cheetos": {
+    longURL: "http://www.youtube.ca",
+    userID: 'user2RandomID' 
+  },
+  "lays": {
+    longURL: "http://www.ebay.ca",
+    userID: 'user2RandomID' 
+  },
 };
 
 /// storing users
@@ -69,27 +83,43 @@ app.get('/signin', (request, response) => {
   response.render('urls_signin');
 });
 
-// app.get('/register', (request, response) => {
-//   response.render('urls_register');
-// });
-
-app.get('/u/:shortURL', (request, response) => {
-  const longURL = urlDataBase[request.params.shortURL];
-  response.redirect(longURL);
-})
-
-app.get('/urls/new', (request, response) => {
-  const templateVars = { user: users[request.cookies.user_id] };
-  response.render('urls_new', templateVars);
+app.get('/register', (request, response) => {
+  response.render('urls_register');
 });
 
+// this takes user to the destination URL
+app.get('/u/:shortURL', (request, response) => {
+  const longURL = urlDataBase[request.params.shortURL].longURL;
+  response.redirect(longURL);
+});
+
+// Creating new short URLs
+app.get('/urls/new', (request, response) => {
+  if (!request.cookies.user_id) {
+    response.redirect('/signin');
+  } else {
+    const templateVars = { user: users[request.cookies.user_id] };
+    response.render('urls_new', templateVars);
+  }
+});
+
+// Editing short URL stuff
 app.get('/urls/:shortURL', (request, response) => {
-  const templateVars = { user: users[request.cookies.user_id], shortURL: request.params.shortURL, longURL: urlDataBase[request.params.shortURL] };
+  const templateVars = { 
+    user: users[request.cookies.user_id], 
+    shortURL: request.params.shortURL, 
+    longURL: urlDataBase[request.params.shortURL].longURL, userList: users, 
+    urls: urlDataBase 
+  };
   response.render('urls_show', templateVars);
 });
 
 app.get('/urls', (request, response) => {
-  const templateVars = { user: users[request.cookies.user_id], urls: urlDataBase };
+  const templateVars = { 
+    user: users[request.cookies.user_id], 
+    urls: urlDataBase, 
+    userList: users 
+  };
   response.render('urls_index', templateVars);
 });
 
@@ -115,20 +145,33 @@ app.post('/register', (request, response) => {
   }
 });
 
-app.post('/urls', (request, response) => {
+app.post('/urls/new', (request, response) => {
   let shortURL = generateRandomString();
-  urlDataBase[shortURL] = 'http://' + request.body.longURL;
+  urlDataBase[shortURL] = {
+    longURL: request.body.longURL,
+    userID: request.cookies.user_id
+  };
   response.redirect(`/urls/${shortURL}`);
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
-  delete urlDataBase[request.params.shortURL];
-  response.redirect('/urls');
+  if (request.cookies.user_id !== urlDataBase[request.params.shortURL].userID) {
+    response.statusCode = 400;
+    response.send('Do not have the permission to delete someone elses keys');
+  } else {
+    delete urlDataBase[request.params.shortURL];
+    response.redirect('/urls');
+  }
 });
 
 app.post('/urls/:shortURL/update', (request, response) => {
-  urlDataBase[request.params.shortURL] = request.body.longURL;
-  response.redirect('/urls');
+  if (request.cookies.user_id !== urlDataBase[request.params.shortURL].userID) {
+    response.statusCode = 400;
+    response.send('You do not have permission to change someones long url');
+  } else {
+    urlDataBase[request.params.shortURL].longURL = request.body.longURL;
+    response.redirect('/urls');
+  }
 });
 
 app.post('/login', (request, response) => {

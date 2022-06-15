@@ -20,6 +20,7 @@
         <tr>
           <th scope="col" class="text-primary">Short URL</th>
           <th scope="col" class="text-primary">Long URL</th>
+          <th scope="col" class="text-primary">Key Master</th>
           <th scope="col" class="text-primary">Edit</th>
           <th scope="col" class="text-primary">Delete</th> 
         </tr>
@@ -27,8 +28,9 @@
       <tbody>
         <% for(let url in urls) { %>
           <tr>
-            <td><%= url %></td>
-            <td><%= urls[url] %></td>
+            <td><a href="/u/<%= url %>"><%= url %></a></td>
+            <td><%= urls[url].longURL %></td>
+            <td><%= userList[urls[url].userID].email %></td>
             <td><form method="GET" action="/urls/<%= url %>"><button type="submit" class="btn btn-outline-primary">Edit</button></form></td>
             <td><form method="POST" action="/urls/<%= url %>/delete"><button type="submit" class="btn btn-outline-danger">X</button></form></td>
           </tr>
