@@ -89,13 +89,10 @@ app.get('/urls/:shortURL', (request, response) => {
     longURL: urlDataBase[request.params.shortURL].longURL, userList: users, 
     urls: urlDataBase
   };
-  // console.log(templateVars);
   response.render('urls_show', templateVars);
 });
 
 app.get('/urls', (request, response) => {
-  console.log('cookie', request.session.user_id);
-  console.log('users', users);
   if (!request.session.user_id) {
     response.redirect('/signin');
   } else {
@@ -103,7 +100,6 @@ app.get('/urls', (request, response) => {
       user: users[request.session.user_id], 
       urls: filterURLs(request.session.user_id, urlDataBase),
     };
-    console.log('in express /urls', filterURLs(request.session.user_id, urlDataBase));
     response.render('urls_index', templateVars);
   }
 });
@@ -136,7 +132,6 @@ app.post('/urls/new', (request, response) => {
     longURL: request.body.longURL,
     userID: request.session.user_id
   };
-  // console.log('/urls/new', urlDataBase);
   response.redirect(`/urls/${shortURL}`);
 });
 
@@ -166,7 +161,6 @@ app.post('/login', (request, response) => {
     response.send('email not found');
   } else if (userEmailExists(request.body.email, users)) {
     const savedUser = getUserByEmail(request.body.email, users);
-    // console.log(savedUser);
     if (!bcrypt.compareSync(request.body.password, savedUser.password)) {
       response.statusCode = 403;
       response.send('Wrong password');

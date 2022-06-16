@@ -27,7 +27,6 @@
       </thead>
       <tbody>
         <% for(let url in urls) { %>
-          <% console.log('urls_index', urls); %>
           <tr>
             <td><a href="/u/<%= url %>"><%= url %></a></td>
             <td><%= urls[url].longURL %></td>
