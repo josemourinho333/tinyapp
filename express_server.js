@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 const PORT = 8080;
 
 /// middleware
@@ -34,12 +35,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk", 10)
   }
 };
 
@@ -150,10 +151,11 @@ app.post('/register', (request, response) => {
     response.statusCode = 400;
     response.send('Email already exists');
   } else {
+    const hashedPW = bcrypt.hashSync(request.body.password, 10);
     users[newUserID] = {
       id: newUserID,
       email: request.body.email,
-      password: request.body.password
+      password: hashedPW
     };
     response.cookie('user_id', newUserID);
     response.redirect('/urls');
@@ -190,16 +192,15 @@ app.post('/urls/:shortURL/update', (request, response) => {
 });
 
 app.post('/login', (request, response) => {
-  console.log(request.body);
   if (!userEmailExists(request.body.email)) {
     response.statusCode = 403;
     response.send('email not found');
   } else if (userEmailExists(request.body.email)) {
     const savedUser = getPWandIDFromEmail(request.body.email);
-    if (request.body.password !== savedUser.password) {
+    if (!bcrypt.compareSync(request.body.password, savedUser.password)) {
       response.statusCode = 403;
       response.send('Wrong password');
-    } else if (request.body.password === savedUser.password) {
+    } else if (bcrypt.compareSync(request.body.password, savedUser.password)) {
       response.cookie('user_id', savedUser.id);
       response.redirect('/urls');
     }
