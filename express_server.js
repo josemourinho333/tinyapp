@@ -87,26 +87,28 @@ app.get('/urls/:shortURL', (request, response) => {
     user: users[request.session.user_id], 
     shortURL: request.params.shortURL, 
     longURL: urlDataBase[request.params.shortURL].longURL, userList: users, 
-    urls: urlDataBase 
+    urls: urlDataBase
   };
+  // console.log(templateVars);
   response.render('urls_show', templateVars);
 });
 
 app.get('/urls', (request, response) => {
+  console.log('cookie', request.session.user_id);
+  console.log('users', users);
   if (!request.session.user_id) {
     response.redirect('/signin');
   } else {
     const templateVars = { 
       user: users[request.session.user_id], 
-      urls: filterURLs(request.session.user_id, users), 
-      userList: users 
+      urls: filterURLs(request.session.user_id, urlDataBase),
     };
+    console.log('in express /urls', filterURLs(request.session.user_id, urlDataBase));
     response.render('urls_index', templateVars);
   }
 });
 
 //// POST 
-
 app.post('/register', (request, response) => {
   const newUserID = generateRandomString();
 
@@ -134,6 +136,7 @@ app.post('/urls/new', (request, response) => {
     longURL: request.body.longURL,
     userID: request.session.user_id
   };
+  // console.log('/urls/new', urlDataBase);
   response.redirect(`/urls/${shortURL}`);
 });
 
@@ -158,12 +161,12 @@ app.post('/urls/:shortURL/update', (request, response) => {
 });
 
 app.post('/login', (request, response) => {
-  if (!userEmailExists(request.body.email)) {
+  if (!userEmailExists(request.body.email, users)) {
     response.statusCode = 403;
     response.send('email not found');
-  } else if (userEmailExists(request.body.email)) {
+  } else if (userEmailExists(request.body.email, users)) {
     const savedUser = getUserByEmail(request.body.email, users);
-    console.log(savedUser);
+    // console.log(savedUser);
     if (!bcrypt.compareSync(request.body.password, savedUser.password)) {
       response.statusCode = 403;
       response.send('Wrong password');

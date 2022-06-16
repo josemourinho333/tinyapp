@@ -27,10 +27,11 @@
       </thead>
       <tbody>
         <% for(let url in urls) { %>
+          <% console.log('urls_index', urls); %>
           <tr>
             <td><a href="/u/<%= url %>"><%= url %></a></td>
             <td><%= urls[url].longURL %></td>
-            <td><%= userList[urls[url].userID].email %></td>
+            <td><%= user.email %></td>
             <td><form method="GET" action="/urls/<%= url %>"><button type="submit" class="btn btn-outline-primary">Edit</button></form></td>
             <td><form method="POST" action="/urls/<%= url %>/delete"><button type="submit" class="btn btn-outline-danger">X</button></form></td>
           </tr>

@@ -12,12 +12,14 @@ const getUserByEmail = (email, users) => {
 const filterURLs = (userID, urlDataBase) => {
   const filtered = {};
     for (const key in urlDataBase) {
+      console.log('helper', urlDataBase[key]);
+      console.log('user ID', userID);
       if (urlDataBase[key].userID === userID) {
         filtered[key] = urlDataBase[key];
       }
     }
   return filtered;
-}
+};
 
 /// checking if given email already exists in users user object
 const userEmailExists = (email, users) => {
