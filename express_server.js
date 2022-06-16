@@ -1,14 +1,21 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
+const cookieSession = require('cookie-session');
+const { getUserByEmail, filterURLs, userEmailExists, generateRandomString } = require('./helpers');
 const PORT = 8080;
 
 /// middleware
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['123789'],
+
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
 /// storing data
 const urlDataBase = {
@@ -44,47 +51,6 @@ const users = {
   }
 };
 
-/// generate random 6 character strings
-function generateRandomString() {
-  const randomNum = () => {
-    return Math.floor(Math.random() * 26) + 97;
-  }
-
-  return String.fromCharCode(randomNum()).toUpperCase() + String.fromCharCode(randomNum()) + String.fromCharCode(randomNum()).toUpperCase() + String.fromCharCode(randomNum()) + String.fromCharCode(randomNum()).toUpperCase() + String.fromCharCode(randomNum())
-};
-
-/// checking if given email already exists in users user object
-const userEmailExists = (email) => {
-  for (const user in users) {
-    if (email === users[user].email) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/// helper, given email, return object with ID and PASSWORD associated with the email
-const getPWandIDFromEmail = (email) => {
-  for (const user in users) {
-    if (email === users[user].email) {
-      return { id: users[user].id, password: users[user].password }
-    }
-  }
-
-  return {};
-};
-
-/// filters urlsdatabase based on cookie user_id give
-const filterURLs = (userID) => {
-  const filtered = {};
-    for (const key in urlDataBase) {
-      if (urlDataBase[key].userID === userID) {
-        filtered[key] = urlDataBase[key];
-      }
-    }
-  return filtered;
-}
-
 //// GET
 
 app.get('/', (request, response) => {
@@ -107,10 +73,10 @@ app.get('/u/:shortURL', (request, response) => {
 
 // Creating new short URLs
 app.get('/urls/new', (request, response) => {
-  if (!request.cookies.user_id) {
+  if (!request.session.user_id) {
     response.redirect('/signin');
   } else {
-    const templateVars = { user: users[request.cookies.user_id] };
+    const templateVars = { user: users[request.session.user_id] };
     response.render('urls_new', templateVars);
   }
 });
@@ -118,7 +84,7 @@ app.get('/urls/new', (request, response) => {
 // Editing short URL stuff
 app.get('/urls/:shortURL', (request, response) => {
   const templateVars = { 
-    user: users[request.cookies.user_id], 
+    user: users[request.session.user_id], 
     shortURL: request.params.shortURL, 
     longURL: urlDataBase[request.params.shortURL].longURL, userList: users, 
     urls: urlDataBase 
@@ -127,12 +93,12 @@ app.get('/urls/:shortURL', (request, response) => {
 });
 
 app.get('/urls', (request, response) => {
-  if (!request.cookies.user_id) {
+  if (!request.session.user_id) {
     response.redirect('/signin');
   } else {
     const templateVars = { 
-      user: users[request.cookies.user_id], 
-      urls: filterURLs(request.cookies.user_id), 
+      user: users[request.session.user_id], 
+      urls: filterURLs(request.session.user_id, users), 
       userList: users 
     };
     response.render('urls_index', templateVars);
@@ -147,7 +113,7 @@ app.post('/register', (request, response) => {
   if (request.body.email === '' || request.body.password === '') {
     response.statusCode = 400;
     response.send('Cannot be empty');
-  } else if (userEmailExists(request.body.email)) {
+  } else if (userEmailExists(request.body.email, users)) {
     response.statusCode = 400;
     response.send('Email already exists');
   } else {
@@ -157,7 +123,7 @@ app.post('/register', (request, response) => {
       email: request.body.email,
       password: hashedPW
     };
-    response.cookie('user_id', newUserID);
+    request.session.user_id = newUserID;
     response.redirect('/urls');
   }
 });
@@ -166,13 +132,13 @@ app.post('/urls/new', (request, response) => {
   let shortURL = generateRandomString();
   urlDataBase[shortURL] = {
     longURL: request.body.longURL,
-    userID: request.cookies.user_id
+    userID: request.session.user_id
   };
   response.redirect(`/urls/${shortURL}`);
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
-  if (request.cookies.user_id !== urlDataBase[request.params.shortURL].userID) {
+  if (request.session.user_id !== urlDataBase[request.params.shortURL].userID) {
     response.statusCode = 400;
     response.send('Do not have the permission to delete someone elses keys');
   } else {
@@ -182,7 +148,7 @@ app.post('/urls/:shortURL/delete', (request, response) => {
 });
 
 app.post('/urls/:shortURL/update', (request, response) => {
-  if (request.cookies.user_id !== urlDataBase[request.params.shortURL].userID) {
+  if (request.session.user_id !== urlDataBase[request.params.shortURL].userID) {
     response.statusCode = 400;
     response.send('You do not have permission to change someones long url');
   } else {
@@ -196,19 +162,20 @@ app.post('/login', (request, response) => {
     response.statusCode = 403;
     response.send('email not found');
   } else if (userEmailExists(request.body.email)) {
-    const savedUser = getPWandIDFromEmail(request.body.email);
+    const savedUser = getUserByEmail(request.body.email, users);
+    console.log(savedUser);
     if (!bcrypt.compareSync(request.body.password, savedUser.password)) {
       response.statusCode = 403;
       response.send('Wrong password');
     } else if (bcrypt.compareSync(request.body.password, savedUser.password)) {
-      response.cookie('user_id', savedUser.id);
+      request.session.user_id = savedUser.id;
       response.redirect('/urls');
     }
   }
 });
 
 app.post('/logout', (request, response) => {
-  response.clearCookie('user_id', request.cookies.user_id);
+  response.clearCookie('user_id', request.session.user_id);
   response.redirect('/signin');
 });
 
