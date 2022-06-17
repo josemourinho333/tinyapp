@@ -38,9 +38,19 @@ function generateRandomString() {
   return String.fromCharCode(randomNum()).toUpperCase() + String.fromCharCode(randomNum()) + String.fromCharCode(randomNum()).toUpperCase() + String.fromCharCode(randomNum()) + String.fromCharCode(randomNum()).toUpperCase() + String.fromCharCode(randomNum())
 };
 
+const dataExists = (shortURL, database) => {
+  for (const data in database) {
+    if (shortURL === data) {
+      return true;
+    }
+  }
+  return false;
+};
+
 module.exports = {
   getUserByEmail,
   filterURLs,
   userEmailExists,
   generateRandomString,
+  dataExists,
 };
