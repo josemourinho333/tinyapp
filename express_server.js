@@ -19,15 +19,21 @@ app.use(cookieSession({
 const urlDataBase = {
   "doritos": {
     longURL: "http://www.lighthouselabs.ca",
-    userID: 'userRandomID' 
+    userID: 'userRandomID',
+    createdOn: '6/15/2022',
+    lastEdit: '6/17/2022'
   },
   "pringles": {
     longURL: "http://www.netflix.ca",
-    userID: 'userRandomID' 
+    userID: 'userRandomID',
+    createdOn: '6/16/2022',
+    lastEdit: '6/18/2022'
   },
   "cheetos": {
     longURL: "http://www.youtube.ca",
-    userID: 'user2RandomID' 
+    userID: 'user2RandomID',
+    createdOn: '6/17/2022',
+    lastEdit: '6/19/2022'
   },
 };
 
@@ -97,7 +103,8 @@ app.get('/urls/:shortURL', (request, response) => {
     const templateVars = { 
       user: users[request.session.user_id], 
       shortURL: request.params.shortURL, 
-      longURL: urlDataBase[request.params.shortURL].longURL, userList: users, 
+      longURL: urlDataBase[request.params.shortURL].longURL, 
+      userList: users, 
       urls: urlDataBase
     };
     response.render('urls_show', templateVars);
@@ -107,7 +114,7 @@ app.get('/urls/:shortURL', (request, response) => {
 // if not logged in, redirect to /login page with error status. If logged in, will render urls_index page.
 app.get('/urls', (request, response) => {
   if (!users[request.session.user_id]) {
-    request.session.user_id = null;
+    request.session = null;
   }
 
   if (!request.session.user_id) {
@@ -146,7 +153,9 @@ app.post('/urls/new', (request, response) => {
   let shortURL = generateRandomString();
   urlDataBase[shortURL] = {
     longURL: request.body.longURL,
-    userID: request.session.user_id
+    userID: request.session.user_id,
+    createdOn: new Date().toLocaleDateString('en-us'),
+    lastEdit: new Date().toLocaleDateString('en-us')
   };
   response.redirect(`/urls/${shortURL}`);
 });
@@ -167,6 +176,7 @@ app.post('/urls/:shortURL/update', (request, response) => {
     return response.status(400).send(`<h2>Error 400. Permission denied. <a href='/login'>Log in to edit/update short URLs.</a></h2>`)
   } else {
     urlDataBase[request.params.shortURL].longURL = request.body.longURL;
+    urlDataBase[request.params.shortURL].lastEdit = new Date().toLocaleDateString('en-us');
     response.redirect('/urls');
   }
 });
