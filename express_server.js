@@ -75,7 +75,7 @@ app.get('/u/:shortURL', (request, response) => {
     const longURL = urlDataBase[request.params.shortURL].longURL;
     response.redirect('https://' + longURL);
   } else {
-    return response.status(403).send('Bad request. Does not exist');
+    return response.status(403).send(`<h2>Error 403. Bad request. Does not exist. <a href='/login'>Sign in to use TinyApp.</a></h2>`);
   }
 });
 
@@ -92,7 +92,7 @@ app.get('/urls/new', (request, response) => {
 // Editing short URL stuff. If logged in, you can edit any keys you have access to. If going to /urls/SOMEONELSEKEY, while you will see the page, if you click update, you won't be able to update. IF NOT LOGGED IN, it will send you an error right away.
 app.get('/urls/:shortURL', (request, response) => {
   if (!request.session.user_id) {
-    response.status(403).send('bad request. you do not have access');
+    response.status(403).send(`<h2>Error 403. Access denied. <a href='/login'>You must sign in to use TinyApp.</a></h2>`);
   } else {
     const templateVars = { 
       user: users[request.session.user_id], 
@@ -126,9 +126,9 @@ app.get('/urls', (request, response) => {
 app.post('/register', (request, response) => {
   const newUserID = generateRandomString();
   if (request.body.email === '' || request.body.password === '') {
-    return response.status(400).send('Fields cannot be empty');
+    return response.status(400).send(`<h2>Error 400. Fields cannot be empty. <a href='/register'>Go back to registration page.</a></h2>`);
   } else if (userEmailExists(request.body.email, users)) {
-    return response.status(400).send('Email already exists');
+    return response.status(400).send(`<h2>Error 400. Email is already in use. <a href='/register'>Go back to registration page.</a></h2>`);
   } else {
     const hashedPW = bcrypt.hashSync(request.body.password, 10);
     users[newUserID] = {
@@ -154,7 +154,7 @@ app.post('/urls/new', (request, response) => {
 // Deletes shortURL. if you're logged in, and accessed shortURL of someone else's you won't be able to delete it still.
 app.post('/urls/:shortURL/delete', (request, response) => {
   if (request.session.user_id !== urlDataBase[request.params.shortURL].userID) {
-    return response.status(400).send('Do not have the permission to delete someone elses keys');
+    return response.status(400).send(`<h2>Error 400. Permission denied. <a href='/login'>Log in to deletee short URLs.</a></h2>`);
   } else {
     delete urlDataBase[request.params.shortURL];
     response.redirect('/urls');
@@ -164,7 +164,7 @@ app.post('/urls/:shortURL/delete', (request, response) => {
 // Updates longURL of a shortURL. if you're logged in, and accessed shortURL of someone else's you won't be able to update it still.
 app.post('/urls/:shortURL/update', (request, response) => {
   if (request.session.user_id !== urlDataBase[request.params.shortURL].userID) {
-    return response.status(400).send('You do not have permission to change someones long url')
+    return response.status(400).send(`<h2>Error 400. Permission denied. <a href='/login'>Log in to edit/update short URLs.</a></h2>`)
   } else {
     urlDataBase[request.params.shortURL].longURL = request.body.longURL;
     response.redirect('/urls');
